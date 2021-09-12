@@ -1,0 +1,71 @@
+---
+title: "demo"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+library(flow)
+options(flow.debug = TRUE, flow.quiet = FALSE)
+cont <- content_tree("inst/test2.R")
+
+rs <- rules(
+  "expr" = rule(
+    msg = "multiline expressions should be indented by one level",
+    on = expr("{"),
+    expr("{\n",
+      indent(zero_or_more(any_token(), until = "}")),
+    "\n}")
+  ),
+
+  "symbol_formals" = rule(
+    on = "symbol_formals",
+    pattern(
+      "symbol_formals",
+      zero_or_one(" = ", "expr"),
+      either_token(
+        rule(", ", msg = "parameter-separating commas should always be followed by a space"),
+        ")"
+      )
+    )
+  ),
+
+  "function_header" = rule(
+    msg = "function headers should wrap to two indentation levels",
+    on = "function",
+    indent(newline = 0L, wrap = 2L,
+      "function",
+      "(",
+      zero_or_more(any_token(), until = ")"),
+      rule(") ", msg = "function headers should always be followed by a space")
+    )
+  )
+)
+
+cont <- content_tree("inst/test2.R")
+match_style(rs, cont)
+```
+
+```{r}
+library(flow)
+cont <- content_tree("inst/test2.R")
+xml_node <- xml2::xml_find_first(cont, "*")
+i <- 100L
+
+while (i > 0L && !is.na(xml_node)) {
+  print(xml_node)
+  xml_node <- xml2::xml_find_first(xml_node, "//*") 
+  i <- i - 1L
+}
+```
+
