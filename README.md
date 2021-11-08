@@ -23,60 +23,40 @@ will ever mature into something stable.
 ## Examples
 
 ``` r
-library(flow)
-
-options(
-  flow.debug = TRUE,  # print lint messages
-  flow.quiet = FALSE
-)
+library(reflow)
+options(reflow.quiet = FALSE)
 
 rs <- rules(
-  "symbol_formals" = rule(
-    on = "symbol_formals",
-    pattern(
-      "symbol_formals",
-      zero_or_one(" = ", "expr"),
-      either_token(
-        rule(
-          msg = "parameter-separating commas should always be followed by a space",
-          ", "
-        ),
-        ")"
-      )
-    )
-  ),
-
-  "function_header" = rule(
-    msg = "function headers should wrap to two indentation levels",
-    on = "function",
-    indent(newline = 0L, wrap = 2L,
-      "function",
-      "(",
-      zero_or_more(any_token(), until = ")"),
-      rule(") ", msg = "function headers should always be followed by a space")
-    )
+  "expr" = rule(
+    msg = "multiline expressions should be indented by one level",
+    "{",
+    ws(nl = 1),
+    indent(zero_or_more(any_token(), until = "}")),
+    ws(nl = 1),
+    "}"
   )
 )
 
 match_style(rs, "
-  x <- function(a=1,b  = 2){
-    print(a + b)
+test <- function() {
+   1 + 2L
+  {
+     1 + 2
   }
+}
 ")
 ```
 
-    <<text> 1:1>
-    1▕   x <- function(a=1,b  = 2){ 
-                        ^
+    <<text> 3:4>
+    1▕
+    2▕ test <- function() {
+    3▕    1 + 2L
+          ^
+    multiline expressions should be indented by one level
 
-    <<text> 1:1>
-    1▕   x <- function(a=1,b  = 2){ 
-                          ^
-
-    <<text> 1:1>
-    1▕   x <- function(a=1,b  = 2){ 
-                              ^
-
-    <<text> 1:1>
-    1▕   x <- function(a=1,b  = 2){ 
-                                  ^
+    <<text> 5:6>
+    3▕    1 + 2L
+    4▕   {
+    5▕      1 + 2
+            ^
+    multiline expressions should be indented by one level
