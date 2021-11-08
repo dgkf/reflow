@@ -1,6 +1,6 @@
 #' @export
-indentation <- function(newline = 0L, wrap = 0L,
-    .spaces = getOption("flow.indent_width", 2L)) {
+indentation <- function(newline = 0L, wrap = .spaces,
+    .spaces = getOption("reflow.indent", 2L)) {
 
   s <- list(newline = newline, wrap = wrap)
   structure(s, class = c("indentation", class(s)))

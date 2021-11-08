@@ -2,7 +2,8 @@
 pattern <- function(..., classes = c()) {
   p <- list(...)
   is_char <- vapply(p, is.character, logical(1L))
-  p[is_char] <- lapply(p[is_char], function(x) as_whitespaced(x))
+  is_ws <- grepl("\\s+", p[is_char])
+  p[is_char][is_ws] <- lapply(p[is_char][is_ws], function(x) as_whitespaced(x))
   if (length(p) == 1L && (inherits(p[[1L]], "pattern") || inherits(p[[1L]], "character")))
     return(p[[1L]])
   .pattern(p, classes = classes)
@@ -23,7 +24,7 @@ format_human <- function(x, ...) {
 .pattern <- function(x, ..., classes = c()) {
   obj <- list(x = x, ...)
   obj$x <- lapply(obj$x, function(x) {
-    if (is.character(x)) as_whitespaced(x)
+    if (is.character(x) && grepl("\\s+", x)) as_whitespaced(x)
     else x
   })
 
@@ -43,7 +44,9 @@ expr <- function(...) {
 
 
 #' @export
-indent <- function(..., newline = 1L, wrap = 2L) {
+indent <- function(..., newline = .spaces, wrap = .spaces,
+    .spaces = getOption("reflow.indent", 2L)) {
+
   .pattern(list(...), newline = newline, wrap = wrap, classes = "indent")
 }
 

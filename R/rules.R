@@ -36,15 +36,18 @@ rule.pattern <- function(x, ..., on = x$x[[1L]], msg = NULL) {
 
 #' @export
 format.rule <- function(x, ...) {
-  sprintf("<rule> %s\n$on\n%s\n$pattern\n%s\n",
-    x$msg,
+  c(
+    paste0("<rule> ", x$msg),
+    "$on",
     paste0(collapse = "\n", "  ", format_pattern_or_char(x$on, ...)),
-    paste0(collapse = "\n", "  ", format_pattern_or_char(x$pattern, ...)))
+    "$pattern",
+    paste0(collapse = "\n", "  ", format_pattern_or_char(x$pattern, ...))
+  )
 }
 
 #' @export
 print.rule <- function(x, ...) {
-  cat(format(x, ...))
+  cat(paste0(collapse = "\n", format(x, ...)), "\n")
 }
 
 #' @export

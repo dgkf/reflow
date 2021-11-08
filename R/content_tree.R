@@ -6,7 +6,7 @@ content_tree <- function(x, ...) {
     content_xml <- lintr::get_source_expressions(path, ...)
     content_xml <- tail(content_xml$expressions, 1L)[[1L]]$full_xml_parsed_content
   } else if (is.character(x)) {
-    content <- x
+    content <- strsplit(x, "\n")[[1L]]
     parsed_content <- parse(text = x, keep.source = TRUE)
     content_xml <- lintr:::safe_parse_to_xml(parsed_content)
     path <- attr(parsed_content, "srcfile")$filename
@@ -15,6 +15,14 @@ content_tree <- function(x, ...) {
     origin = list(content = content, source_path = path),
     class = c("content_tree", class(content_xml))
   )
+}
+
+content_tree_extract_xml <- function(ct) {
+  xml2::xml_find_all(ct, "/exprlist/*")
+}
+
+content_tree_extract_origin <- function(ct) {
+  attr(ct, "origin")
 }
 
 #' @export

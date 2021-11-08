@@ -11,6 +11,7 @@ token_aliases <- list(
   "+" = "op_plus",
   "/" = "op_slash",
   "^" = "op_caret",
+  ";" = "op_semicolon",
   "=" = either_token(
     "eq_formals",
     "eq_assign"

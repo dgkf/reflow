@@ -6,6 +6,24 @@ whitespace <- function(spaces = 0L, newlines = 0L) {
 }
 
 
+#' @export
+ws <- function(s = NA, nl = NA) {
+  whitespace(spaces = s, newlines = nl)
+}
+
+
+#' @export
+is.na.whitespace <- function(ws, ...) {
+  is.na(ws$spaces) && is.na(ws$newlines)
+}
+
+
+#' @export
+is.na.whitespaced <- function(ws, ...) {
+  is.na(ws$before) && is.na(ws$after)
+}
+
+
 
 #' A special whitespace class that fails on whitespace last
 #'
@@ -14,19 +32,24 @@ whitespace <- function(spaces = 0L, newlines = 0L) {
 #'
 #' @export
 whitespaced <- function(x, before = whitespace(NA, NA), after = whitespace(NA, NA)) {
-  pattern(
-    rule(
-      msg = sprintf("`%s` should be preceeded by %s", x, format_human(before)),
-      .pattern(x,
-        before = before,
-        after = whitespace(NA, NA),
-        classes = "whitespaced")),
-    rule(
-      msg = sprintf("`%s` should be followed by %s", x, format_human(after)),
-      .pattern(x,
-        before = whitespace(NA, NA),
-        after = after,
-        classes = "whitespaced")))
+  before_ws <- rule(
+    msg = sprintf("`%s` should be preceeded by %s", x, format_human(before)),
+    .pattern(x,
+      before = before,
+      after = whitespace(NA, NA),
+      classes = "whitespaced"))
+
+  after_ws <- rule(
+    msg = sprintf("`%s` should be followed by %s", x, format_human(after)),
+    .pattern(x,
+      before = whitespace(NA, NA),
+      after = after,
+      classes = "whitespaced"))
+
+  elems <- list()
+  if (!is.na(before_ws$pattern)) elems <- append(elems, list(before_ws))
+  if (!is.na(after_ws$pattern)) elems <- append(elems, list(after_ws))
+  do.call(pattern, elems)
 }
 
 #' A constructor for coercing to whitespaced
