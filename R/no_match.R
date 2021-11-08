@@ -1,9 +1,7 @@
 no_match <- function(style, xml_node, ..., rule = NULL, code = NULL,
   debug = getOption("reflow.debug", FALSE)) {
 
-  msg <- if (!is.null(rule)) rule$msg
-    else paste0("expected: ", format(style))
-
+  msg <- rule$msg %||% paste0("expected: ", format(style))
   cond <- simpleCondition(msg)
   class(cond) <- c(
     "interruptingUnmatchedRuleCondition",

@@ -11,6 +11,11 @@ content_tree <- function(x, ...) {
     content_xml <- lintr:::safe_parse_to_xml(parsed_content)
     path <- attr(parsed_content, "srcfile")$filename
   }
+
+  # modify lintr (native) xml structure instead doing some post-processing to
+  # make some parenthesized keyword expressions more consistent
+  content_xml <- xml_restructure_function_headers(content_xml)
+
   structure(content_xml,
     origin = list(content = content, source_path = path),
     class = c("content_tree", class(content_xml))

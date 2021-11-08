@@ -21,7 +21,7 @@ match_style <- function(style, xml_node, ...) {
 }
 
 
-test_style <- function(...) {
+test_style <- function(..., debug) {
   withRestarts(withCallingHandlers({
       structure(TRUE,
         match = match_style(..., debug = FALSE),
@@ -62,9 +62,12 @@ get_test_match <- function(x, ...) {
 
 #' @export
 match_style.rules <- function(style, xml_node, ...) {
-  for (xml_node in xml2::xml_find_all(xml_node, ".//*"))
-    for (rule in style)
-      match_style(rule, xml_node, ...)
+  for (xml_node in xml2::xml_find_all(xml_node, ".//*")) {
+    for (rule in style) {
+      # rules may apply at any depth, initialize with unknown indentation
+      match_style(rule, xml_node, ind = indentation(newline = NA), ...)
+    }
+  }
   xml_node
 }
 
@@ -83,8 +86,13 @@ match_style.default <- function(style, xml_node, ...) {
 
 #' @export
 match_style.list <- function(style, xml_node, ind = indentation(), ...) {
+  # determine whether a subpattern will be caught by a future indentation check
+  is_deepest_pattern <- function(i) {
+    !inherits(i, "pattern") || length(i$x) == 0L
+  }
+
   for (subpat in style) {
-    if (!inherits(subpat, "indent"))
+    if (!inherits(subpat, "indent") && is_deepest_pattern(subpat))
       match_style(ind, xml_node, ind = ind, ...)
     xml_node <- match_style(subpat, xml_node, ind = ind, ...)
   }
@@ -168,6 +176,7 @@ match_style.never_pattern <- function(style, xml_node, ...) {
 
 #' @export
 match_style.indent <- function(style, xml_node, ind = indentation(), ...) {
+  if (is.na(ind)) ind <- prev_block_indentation(xml_node)
   ind <- ind + indentation(newline = style$newline, wrap = style$wrap)
   NextMethod(ind = ind)
 }
@@ -181,7 +190,7 @@ match_style.indentation <- function(style, xml_node, ind = indentation(), ...) {
 
   if (isTRUE(ws >= whitespace(newlines = 1L, spaces = 0L))) {
     node_indent <- as.numeric(xml2::xml_attr(xml_node, "col1")) - 1L
-    if (node_indent != style$newline) {
+    if (isTRUE(node_indent != style$newline)) {
       suppress_no_match_interrupt(no_match(style, xml_node, ...))
     }
   }
@@ -192,9 +201,7 @@ match_style.indentation <- function(style, xml_node, ind = indentation(), ...) {
 
 #' @export
 match_style.any_token <- function(style, xml_node, ...) {
-  next_xml_node <- xml_next_sibling(xml_node)
-  if (!is.na(next_xml_node)) return(next_xml_node)
-  no_match(style, xml_node, ...)
+  xml_next_sibling(xml_node)
 }
 
 
@@ -211,17 +218,13 @@ match_style.either_token <- function(style, xml_node, ...) {
 
 #' @export
 match_style.zero_or_more <- function(style, xml_node, ...) {
-  n <- 1L
-  while (n > 0L) {
-    if (is.na(xml_node))
-      return(xml_node)
+  n <- 0L
+  repeat {
+    if (is.na(xml_node) || test_style(style$until, xml_node, ...))
+      break
 
-    if (test_style(style$until, xml_node, ...))
-      return(xml_node)
-
-    if (n > 1L)
-      xml_node <- match_style(style$sep, xml_node, ...)
-
+    # TODO: this assumes that this style will exhaust an expression
+    if (n > 0L) xml_node <- match_style(style$sep, xml_node, ...)
     xml_node <- match_style(style$x, xml_node, ...)
     n <- n + 1L
   }

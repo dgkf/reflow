@@ -22,15 +22,19 @@ rs <- rules(
   "expr" = rule(
     msg = "multiline expressions should be indented by one level",
     "{",
-    indent(
-      ws(nl = 1),
-      zero_or_more(any_token(), until = "}"),
-      ws(nl = 1)
-    ),
+    ws(nl = 1),
+    indent(zero_or_more(any_token(), until = "}")),
+    ws(nl = 1),
     "}"
   )
 )
 
-cont <- content_tree("inst/test2.R")
-match_style(rs, cont)
+match_style(rs, "
+test <- function() {
+   1 + 2L
+  {
+     1 + 2
+  }
+}
+")
 ```

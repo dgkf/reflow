@@ -48,3 +48,49 @@ xml_preceding_sibling <- function(x) {
 xml_next_sibling <- function(x) {
   xml2::xml_find_first(x, "following-sibling::*")
 }
+
+xml_first_node_on_earlier_line <- function(x) {
+  line <- as.numeric(xml2::xml_attr(x, "line1"))
+  xpath <- sprintf("(//*[@line2 < %d])[last()]", line)
+  last_prev_line_node <- xml2::xml_find_first(x, xpath)
+  prev_line <- as.numeric(xml2::xml_attr(last_prev_line_node, "line2"))
+  xpath <- sprintf("//*[@line1 = %d]", prev_line)
+  xml2::xml_find_first(x, xpath)
+}
+
+xml_first_node_of_first_expr_of_prev_line <- function(x) {
+  # find last node on a prior code line
+  line <- as.numeric(xml2::xml_attr(x, "line1"))
+  xpath <- sprintf("(//*[@line2 < %d])[last()]", line)
+  last_prev_line_node <- xml2::xml_find_first(x, xpath)
+
+  # find the start of the first expression on the previous code line
+  prev_line <- as.numeric(xml2::xml_attr(last_prev_line_node, "line2"))
+  xpath <- sprintf("//*[@line2 = %d]", prev_line)
+  prev_block_start <- xml2::xml_find_first(x, xpath)
+
+  # find the first node on the line where that expression begins
+  prev_block_start_line <- as.numeric(xml2::xml_attr(prev_block_start, "line1"))
+  xpath <- sprintf("//*[@line1 = %d]", prev_block_start_line)
+  xml2::xml_find_first(x, xpath)
+}
+
+xml_restructure_function_headers <- function(x) {
+  fns <- xml2::xml_find_all(x, "//FUNCTION")
+  for (fn_node in fns) {
+    par <- xml2::xml_parent(fn_node)
+    header_node <- xml2::xml_add_child(par, .where = 1L, par)
+    xml2::xml_remove(xml2::xml_child(header_node, 1L))
+    xml2::xml_remove(xml2::xml_child(header_node, xml2::xml_length(header_node)))
+    xml2::xml_remove(xml2::xml_children(par)[3:(xml2::xml_length(par)-1L)])
+    header_node_first <- xml2::xml_child(header_node, 1L)
+    header_node_last  <- xml2::xml_child(header_node, xml2::xml_length(header_node))
+    xml2::xml_attr(header_node, "line1") <- xml2::xml_attr(header_node_first, "line1")
+    xml2::xml_attr(header_node, "col1")  <- xml2::xml_attr(header_node_first, "col1")
+    xml2::xml_attr(header_node, "line2") <- xml2::xml_attr(header_node_last,  "line2")
+    xml2::xml_attr(header_node, "col2")  <- xml2::xml_attr(header_node_last,  "col2")
+    xml2::xml_attr(header_node, "start") <- xml2::xml_attr(header_node_first, "start")
+    xml2::xml_attr(header_node, "end")  <- xml2::xml_attr(header_node_first,  "end")
+  }
+  x
+}
