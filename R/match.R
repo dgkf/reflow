@@ -150,16 +150,49 @@ match_style.expr <- function(style, xml_node, ...) {
   # iterate over expression, matching style patterns
   outer_next_sibling <- xml_next_sibling(xml_node)
   xml_node <- xml2::xml_child(xml_node)
-  for (subpat in style$x) {
+
+  and_any_tokens <- FALSE
+  for (i in seq_along(style$x)) {
+    subpat <- style$x[[i]]
+    if (i == length(style$x) && identical(subpat, any_tokens)) {
+      and_any_tokens <- TRUE
+      break
+    }
     xml_node <- match_style(subpat, xml_node, ...)
   }
 
   # test that the pattern fully exhausts the expressions
   finished_expr <- is.na(xml_node)
-  if (!isTRUE(finished_expr))
+  if (!and_any_tokens && !isTRUE(finished_expr))
     no_match(style, xml_node, ...)
 
   outer_next_sibling
+}
+
+
+
+#' @export
+match_style.singleline <- function(style, xml_node, ...) {
+  startline <- xml_line1(xml_node)
+  if (m <- test_style(style$x, xml_node, ...)) {
+    xml_end_node <- get_test_match(m)
+    endline <- xml_line2(xml_node)
+    if (startline == endline) return(xml_end_node)
+  }
+  no_match(style, xml_node, ...)
+}
+
+
+
+#' @export
+match_style.multiline <- function(style, xml_node, ...) {
+  startline <- xml_line1(xml_node)
+  if (m <- test_style(style$x, xml_node, ...)) {
+    xml_end_node <- get_test_match(m)
+    endline <- xml_line2(xml_preceding_sibling(xml_node))
+    if (startline < endline) return(xml_end_node)
+  }
+  no_match(style, xml_node, ...)
 }
 
 

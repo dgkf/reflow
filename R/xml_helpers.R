@@ -75,6 +75,11 @@ xml_first_node_of_first_expr_of_prev_line <- function(x) {
   xml2::xml_find_first(x, xpath)
 }
 
+xml_line1 <- function(x) as.numeric(xml2::xml_attr(x, "line1"))
+xml_col1 <- function(x) as.numeric(xml2::xml_attr(x, "col1"))
+xml_line2 <- function(x) as.numeric(xml2::xml_attr(x, "line2"))
+xml_col2 <- function(x) as.numeric(xml2::xml_attr(x, "col2"))
+
 xml_restructure_function_headers <- function(x) {
   fns <- xml2::xml_find_all(x, "//FUNCTION")
   for (fn_node in fns) {

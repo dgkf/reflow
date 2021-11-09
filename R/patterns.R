@@ -43,11 +43,34 @@ expr <- function(...) {
 
 
 
+#' Partial expression, short-circuiting matching after partial expression match
+#'
+#' @export
+pexpr <- function(...) {
+  expr(..., any_tokens)
+}
+
+
+
 #' @export
 indent <- function(..., newline = .spaces, wrap = .spaces,
     .spaces = getOption("reflow.indent", 2L)) {
 
   .pattern(list(...), newline = newline, wrap = wrap, classes = "indent")
+}
+
+
+
+#' @export
+singleline <- function(...) {
+  .pattern(list(...), classes = "singleline")
+}
+
+
+
+#' @export
+multiline <- function(...) {
+  .pattern(list(...), classes = "multiline")
 }
 
 

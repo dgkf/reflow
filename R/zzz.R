@@ -17,3 +17,5 @@ token_aliases <- list(
     "eq_assign"
   )
 )
+
+any_tokens <- zero_or_more(any_token())

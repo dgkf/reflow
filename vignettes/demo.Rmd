@@ -22,8 +22,13 @@ rs <- rules(
   "function header opening paren should not be preceded by whitespace" = rule(
     "function", ws(0), "expr"
   ),
-  "function header closing paren should be followed by a space or newline" = rule(
-    "function", "expr", either_token(ws(1), ws(nl = 1)), any_token()
+  "function header closing paren should have a single space before an opening curly brace" = rule(
+    on = list("function", "expr", pexpr("{")),
+    "function", "expr", ws(1), pexpr("{")
+  ),
+  "multiline function headers should leave an empty line before the function body" = rule(
+    on = list("function", multiline("expr"), pexpr("{")),
+    "function", multiline("expr"), pexpr("{", ws(nl=2))
   ),
   "parameter assignments should always be surrounded by single spaces" = rule(
     on = "eq_formals",
@@ -39,10 +44,12 @@ rs <- rules(
 )
 
 match_style(rs, "
-test <- function()  1L
+test <- function() 1L
 
-test <- function (a = 1L, b  = 3){
-   1 + 2L
+test <- function (a = 1L,
+  b  = 3){
+
+  1 + 2L
   {
     1 + 2
   }
