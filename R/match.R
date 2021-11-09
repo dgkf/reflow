@@ -91,8 +91,12 @@ match_style.list <- function(style, xml_node, ind = indentation(), ...) {
     !inherits(i, "pattern") || length(i$x) == 0L
   }
 
+  is_ignored_style_class <- function(i) {
+    any(c("indent", "whitespace") %in% class(subpat))
+  }
+
   for (subpat in style) {
-    if (!inherits(subpat, "indent") && is_deepest_pattern(subpat))
+    if (!is_ignored_style_class(subpat) && is_deepest_pattern(subpat))
       match_style(ind, xml_node, ind = ind, ...)
     xml_node <- match_style(subpat, xml_node, ind = ind, ...)
   }

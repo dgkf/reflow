@@ -19,8 +19,17 @@ library(reflow)
 options(reflow.quiet = FALSE)
 
 rs <- rules(
-  "expr" = rule(
-    msg = "multiline expressions should be indented by one level",
+  "function header opening paren should not be preceded by whitespace" = rule(
+    "function", ws(0), "expr"
+  ),
+  "function header closing paren should be followed by a space or newline" = rule(
+    "function", "expr", either_token(ws(1), ws(nl = 1)), any_token()
+  ),
+  "parameter assignments should always be surrounded by single spaces" = rule(
+    on = "eq_formals",
+    ws(1), "=", ws(1)
+  ),
+  "multiline expressions should be indented by one level" = rule(
     "{",
     ws(nl = 1),
     indent(zero_or_more(any_token(), until = "}")),
@@ -30,10 +39,12 @@ rs <- rules(
 )
 
 match_style(rs, "
-test <- function() {
+test <- function()  1L
+
+test <- function (a = 1L, b  = 3){
    1 + 2L
   {
-     1 + 2
+    1 + 2
   }
 }
 ")

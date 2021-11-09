@@ -4,13 +4,13 @@ rules <- function(...) {
   rs <- mapply(
     function(x, n) {
       if (inherits(x, "rule")) {
-        if (is.null(x$on)) x$obj <- n
+        if (is.null(x$msg) && nchar(n)) x$msg <- n
         return(x)
       }
       rule(x, on = n)
     },
     rs,
-    names(rs),
+    names(rs) %||% rep_len("", length(rs)),
     SIMPLIFY = FALSE)
   structure(rs, class = c("rules", class(rs)))
 }
